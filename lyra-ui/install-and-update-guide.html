@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lyra UI — Install & Update Guide</title>
+<style>
+  :root {
+    --blue-strong: #166cca;
+    --blue-active-text: #185ba4;
+    --blue-moderate: #D3E6FD;
+    --blue-subtle: #ecf5fe;
+    --border-subtle: rgba(0,0,0,0.10);
+    --border-default: rgba(0,0,0,0.16);
+    --text-default: #1f2328;
+    --text-secondary: #57606a;
+    --text-disabled: #8c959f;
+    --surface: #ffffff;
+    --shell: #f3f5f6;
+    --success-subtle: #d9f2e3;
+    --success-strong: #1a7f37;
+    --critical-subtle: #fde2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--shell);
+    color: var(--text-default);
+    line-height: 1.5;
+  }
+  .app {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .brand .mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--blue-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .brand h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  .brand p { margin: 0; font-size: 12.5px; color: var(--text-secondary); }
+
+  /* Mode switch (segmented tabs) */
+  .mode-switch {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 20px;
+  }
+  .mode-tab {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 10px 4px;
+    margin-right: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .mode-tab.active {
+    color: var(--blue-active-text);
+    border-bottom-color: var(--blue-strong);
+    font-weight: 600;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    display: flex;
+    min-height: 460px;
+    overflow: hidden;
+  }
+
+  /* Left step rail */
+  .rail {
+    width: 240px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-subtle);
+    padding: 20px 14px;
+    background: #fafbfc;
+  }
+  .rail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    padding: 6px 4px;
+    border-radius: 6px;
+  }
+  .rail-item:hover { background: var(--blue-subtle); }
+  .rail-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: var(--shell);
+    color: var(--text-disabled);
+  }
+  .rail-item.current .rail-icon { background: var(--blue-subtle); color: var(--blue-active-text); box-shadow: 0 0 0 2px var(--blue-moderate) inset; }
+  .rail-item.done .rail-icon { background: var(--success-subtle); color: var(--success-strong); }
+  .rail-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding-top: 3px;
+  }
+  .rail-item.current .rail-label { color: var(--blue-active-text); font-weight: 600; }
+  .rail-item.done .rail-label { color: var(--text-default); }
+  .rail-connector {
+    width: 1px;
+    height: 14px;
+    background: var(--border-default);
+    margin-left: 16px;
+  }
+
+  /* Right content */
+  .content {
+    flex: 1;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .content h2 {
+    font-size: 18px;
+    margin: 0 0 6px;
+  }
+  .content .step-count {
+    font-size: 12px;
+    color: var(--text-disabled);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 4px;
+  }
+  .content .step-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0 0 18px;
+    max-width: 520px;
+  }
+  .content-body { flex: 1; }
+  pre.cmd {
+    background: #1f2328;
+    color: #e6edf3;
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    overflow-x: auto;
+    margin: 0 0 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .note { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 10px; }
+  .note.warn { color: #9a6700; }
+  code.inline {
+    background: var(--blue-subtle);
+    color: var(--blue-active-text);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .arch-diagram {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    margin: 4px 0 16px;
+    flex-wrap: wrap;
+  }
+  .arch-box {
+    flex: 1;
+    min-width: 130px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    background: var(--shell);
+  }
+  .arch-box.hub { background: var(--blue-subtle); border-color: var(--blue-strong); }
+  .arch-box strong { display: block; font-size: 12.5px; margin-bottom: 2px; }
+  .arch-arrow { align-self: center; color: var(--text-secondary); font-size: 16px; }
+
+  .mark-done-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 0;
+  }
+  .mark-done-row input {
+    width: 16px; height: 16px;
+    accent-color: var(--blue-strong);
+    cursor: pointer;
+  }
+  .mark-done-row label { font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+
+  .content-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 18px;
+    margin-top: 18px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  button.nav-btn {
+    border-radius: 7px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-default);
+    background: #fff;
+    color: var(--text-default);
+  }
+  button.nav-btn.primary {
+    background: var(--blue-strong);
+    color: #fff;
+    border-color: var(--blue-strong);
+  }
+  button.nav-btn.primary:hover { background: var(--blue-active-text); }
+  button.nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.nav-btn:not(:disabled):not(.primary):hover { background: var(--shell); }
+
+  /* Preference (final) step */
+  .pref-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 12px;
+  }
+  .pref-label p.title { margin: 0 0 3px; font-size: 14px; font-weight: 500; }
+  .pref-label p.desc { margin: 0; font-size: 12.5px; color: var(--text-secondary); max-width: 420px; }
+  .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; margin-top: 2px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; cursor: pointer;
+    background: var(--border-default);
+    border-radius: 999px;
+    transition: background 150ms ease;
+  }
+  .slider::before {
+    content: ""; position: absolute; width: 16px; height: 16px;
+    left: 3px; top: 3px; background: #fff; border-radius: 50%;
+    transition: transform 150ms ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  }
+  .switch input:checked + .slider { background: var(--blue-strong); }
+  .switch input:checked + .slider::before { transform: translateX(18px); }
+  .copy-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  button.copy-btn {
+    background: var(--blue-strong); color: #fff; border: none; border-radius: 7px;
+    padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  button.copy-btn:hover { background: var(--blue-active-text); }
+  button.copy-btn.copied { background: var(--success-strong); }
+  .copy-hint { font-size: 12.5px; color: var(--text-secondary); }
+
+  footer.page-foot {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 18px;
+  }
+
+  a.nav-btn { display: inline-flex; align-items: center; text-decoration: none; }
+  .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .field-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 10px 0 14px; }
+  .field { margin: 4px 0 16px; }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+  }
+  .field input[type="text"] {
+    width: 100%;
+    max-width: 320px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font-size: 13.5px;
+    color: var(--text-default);
+    background: #fff;
+  }
+  .field input[type="text"]:focus {
+    outline: none;
+    border-color: var(--blue-strong);
+    box-shadow: 0 0 0 3px var(--blue-moderate);
+  }
+  .radio-group { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 16px; }
+  .radio-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .radio-card:has(input:checked) {
+    border-color: var(--blue-strong);
+    background: var(--blue-subtle);
+  }
+  .radio-card input { margin-top: 3px; accent-color: var(--blue-strong); flex-shrink: 0; }
+  .radio-title { margin: 0 0 2px; font-size: 13.5px; font-weight: 600; }
+  .radio-desc { margin: 0; font-size: 12px; color: var(--text-secondary); }
+  .callout {
+    background: var(--blue-subtle);
+    border: 1px solid var(--blue-moderate);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 640px) {
+    .panel { flex-direction: column; }
+    .rail { width: 100%; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="brand">
+    <div class="mark">λ</div>
+    <div>
+      <h1>Lyra UI — Install &amp; Update Guide</h1>
+      <p>Step-by-step walkthrough for setting up or syncing a project against the Lyra design system</p>
+    </div>
+  </div>
+
+  <div class="mode-switch">
+    <button class="mode-tab active" data-mode="install">First-time install</button>
+    <button class="mode-tab" data-mode="update">Keeping in sync</button>
+  </div>
+
+  <div class="panel">
+    <div class="rail" id="rail"></div>
+    <div class="content">
+      <p class="step-count" id="step-count"></p>
+      <h2 id="step-title"></h2>
+      <p class="step-desc" id="step-desc"></p>
+      <div class="content-body" id="step-body"></div>
+      <div class="content-footer">
+        <button class="nav-btn" id="back-btn">Back</button>
+        <div class="mark-done-row">
+          <input type="checkbox" id="done-checkbox" />
+          <label for="done-checkbox">Mark this step done</label>
+        </div>
+        <button class="nav-btn primary" id="next-btn">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="page-foot">
+    This file lives at <code class="inline">lyra-ui/install-and-update-guide.html</code> — open it directly in a browser any time. Progress is stored locally in this browser only.
+  </footer>
+
+</div>
+
+<script>
+  const STORAGE_KEY = "lyra-guide-state-v2";
+
+  const INSTALL_STEPS = [
+    {
+      id: "install-access",
+      title: "Request access to GitHub",
+      desc: "One click sends the request — no need to go find the repo on GitHub yourself.",
+      body: `
+        <div class="callout">
+          <strong>lyra-ui is a private repo on David Bauer's personal GitHub account</strong> (davidbauerjr991), not an organization — so GitHub's built-in "Request access" button doesn't apply here (that only exists for org-owned repos). There's no self-service way to get in through GitHub itself; David has to add you as a collaborator directly. This button is the fastest path to that.
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label for="gh-username">Your GitHub username</label>
+          <input type="text" id="gh-username" placeholder="e.g. jsmith-nice" />
+        </div>
+        <div class="action-row">
+          <a class="nav-btn primary" id="email-access-btn" href="#">Email David to request access</a>
+          <button class="copy-btn" id="copy-access-btn">Copy message instead</button>
+        </div>
+        <span class="copy-hint" id="access-hint"></span>
+        <p class="note" style="margin-top:14px;">Once David confirms you've been added, move to the next step.</p>
+      `
+    },
+    {
+      id: "install-download",
+      title: "Download to a local folder",
+      desc: "Have Claude clone it straight into your workspace, as a sibling to whichever app will consume it.",
+      body: `
+        <div class="field-row">
+          <button class="nav-btn" id="pick-folder-btn">Choose a local root folder…</button>
+          <span class="copy-hint" id="picked-folder-label">No folder selected — Claude will default to a new "lyra-workspace" folder</span>
+        </div>
+        <div class="copy-row">
+          <button class="copy-btn" id="copy-clone-btn">Copy clone message for Claude</button>
+          <span class="copy-hint" id="clone-hint"></span>
+        </div>
+        <p class="note warn" style="margin-top:10px;">This runs through whatever git credentials are already set up where Claude is working (SSH key, cached token, <code class="inline">gh auth login</code>) — it only works once you're an authorized collaborator. Browsers also can't reveal a folder's full path (security sandboxing), so the picker above just captures its name for Claude to use.</p>
+      `
+    },
+    {
+      id: "install-storybook",
+      title: "Launch Storybook",
+      desc: "See every component and its states running locally.",
+      body: `
+        <p class="note" style="margin:0 0 8px;">Ask Claude to install dependencies (if needed) and start Storybook in the lyra-ui repo:</p>
+        <div class="copy-row">
+          <button class="copy-btn" id="copy-storybook-btn">Copy message for Claude</button>
+          <span class="copy-hint" id="storybook-hint"></span>
+        </div>
+        <p class="note warn">Claude's shell is a separate sandbox from your computer, so a live dev server it starts (port 6006) won't be reachable at localhost in your own browser. For a live, hot-reloading session, run the copied command yourself in your own terminal instead.</p>
+        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border-subtle);">
+          <p class="note" style="margin:0 0 8px;">For something you <em>can</em> open right now from this page, ask Claude to build a static snapshot, then open it below:</p>
+          <div class="copy-row">
+            <button class="copy-btn" id="copy-rebuild-btn">Copy "rebuild snapshot" message</button>
+            <a class="nav-btn" href="storybook-static/index.html" target="_blank">Open last built snapshot →</a>
+          </div>
+        </div>
+      `
+    },
+    {
+      id: "install-scaffold",
+      title: "Create your first page",
+      desc: "Scaffold a new sibling repo from the lyra-ux-templates starter, built entirely from lyra-ui components.",
+      body: `
+        <div class="field">
+          <label for="new-repo-name">New repo name</label>
+          <input type="text" id="new-repo-name" value="my-new-project" />
+        </div>
+        <div class="field">
+          <label for="new-app-name">App name (shown in the top header — separate from the repo name and from any individual page's title)</label>
+          <input type="text" id="new-app-name" value="My New Project" />
+        </div>
+        <div class="radio-group" id="page-type-group">
+          <label class="radio-card">
+            <input type="radio" name="page-type" value="admin" checked />
+            <div>
+              <p class="radio-title">Blank admin page</p>
+              <p class="radio-desc">AdminShell + TreeMenu layout, matches DesktopDesignsPage's full shape (actions, panels, nav) minus its mock records, mounted inside a Header + LeftNav app shell (like App.tsx does for it).</p>
+            </div>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="page-type" value="agent" />
+            <div>
+              <p class="radio-title">Blank agent page</p>
+              <p class="radio-desc">LeftNav + AiPanel shell, same shape as AgentNextGenPage — self-contained, with its own header/nav built in — empty content area.</p>
+            </div>
+          </label>
+        </div>
+        <div class="copy-row">
+          <button class="copy-btn" id="copy-scaffold-btn">Copy setup message for Claude</button>
+          <span class="copy-hint" id="scaffold-hint"></span>
+        </div>
+        <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border-subtle);">
+          <button class="nav-btn" id="reveal-launch-btn">Once Claude confirms it's created →</button>
+          <div id="launch-section" style="display:none; margin-top:14px;">
+            <p class="note" style="margin:0 0 8px;">Have Claude install dependencies and confirm the new page builds cleanly:</p>
+            <div class="copy-row">
+              <button class="copy-btn" id="copy-launch-btn">Copy launch message for Claude</button>
+              <span class="copy-hint" id="launch-hint"></span>
+            </div>
+            <p class="note warn">Claude will verify it builds and tell you the exact <code class="inline">npm run dev</code> command — run that yourself to see it live, since Claude's sandbox can't expose a dev server to your browser.</p>
+          </div>
+        </div>
+      `
+    }
+  ];
+
+  const UPDATE_STEPS = [
+    {
+      id: "update-pull",
+      title: "Pull the latest lyra-ui commits",
+      desc: "Ask Claude to pull and quietly check whether anything's actually new.",
+      body: `
+        <p class="note warn" style="margin:0 0 10px;">This page can't check for new commits the moment it opens — a static file has no network or shell access on its own. Click below instead; Claude pulls and checks in one step, and only flags it if there's something to review.</p>
+        <div class="copy-row">
+          <button class="copy-btn" id="copy-pull-btn">Copy message for Claude</button>
+          <span class="copy-hint" id="pull-hint"></span>
+        </div>
+      `
+    },
+    {
+      id: "update-read",
+      title: "Read what changed",
+      desc: "Check PROJECT_SUMMARY.md for a human-readable description of the new commits.",
+      body: `
+        <p class="note" style="margin:0;">Open <code class="inline">lyra-ui/PROJECT_SUMMARY.md</code> and decide whether any hand-rolled code in this app should be migrated to a new or changed component.
+        Or just ask Claude — it reads this file and summarizes it for you. Skip this step if step 1 found nothing new.</p>
+      `
+    },
+    {
+      id: "update-propagate",
+      title: "Propagate the changes",
+      desc: "Migrate what applies, then mark these commits as seen — one step.",
+      body: `
+        <div class="pref-row">
+          <div class="pref-label">
+            <p class="title">Automatically propagate lyra-ui changes to other repos</p>
+            <p class="desc">Off (default): Claude explains what changed and asks before migrating anything.
+            On: Claude migrates straightforward, same-component fixes on its own and only asks about genuinely new patterns.
+            Either way, in-place fixes to components you already use need no manual swap — they're live via the alias the moment lyra-ui changes.</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="auto-propagate-toggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <p class="note warn" style="margin:0 0 8px;">
+          This toggle only saves your preference in this page — a static HTML file can't edit files in your repos by itself.
+          Copy the message below and send it to Claude: it updates the "Sync check" step in each app's <code class="inline">CLAUDE.md</code> to match, propagates anything that applies right now, and updates <code class="inline">.lyra-ui-sync</code> to lyra-ui's current HEAD so these commits aren't re-flagged next time.
+        </p>
+        <div class="copy-row">
+          <button class="copy-btn" id="copy-btn">Copy message for Claude</button>
+          <span class="copy-hint" id="copy-hint"></span>
+        </div>
+      `
+    }
+  ];
+
+  const MODES = { install: INSTALL_STEPS, update: UPDATE_STEPS };
+
+  function loadState() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+  const state = Object.assign({ done: {}, currentIndex: { install: 0, update: 0 }, autoPropagate: false, mode: "install" }, loadState());
+  if (!state.done) state.done = {};
+  if (!state.currentIndex) state.currentIndex = { install: 0, update: 0 };
+
+  let mode = state.mode || "install";
+
+  function steps() { return MODES[mode]; }
+  function currentIndex() { return state.currentIndex[mode] || 0; }
+  function setCurrentIndex(i) {
+    state.currentIndex[mode] = Math.max(0, Math.min(steps().length - 1, i));
+    saveState(state);
+  }
+
+  function renderRail() {
+    const rail = document.getElementById("rail");
+    rail.innerHTML = "";
+    const list = steps();
+    list.forEach((step, i) => {
+      const isDone = !!state.done[step.id];
+      const isCurrent = i === currentIndex();
+      const item = document.createElement("div");
+      item.className = "rail-item" + (isCurrent ? " current" : "") + (isDone ? " done" : "");
+      item.innerHTML = `<div class="rail-icon">${isDone ? "✓" : (i + 1)}</div><div class="rail-label">${step.title}</div>`;
+      item.addEventListener("click", () => { setCurrentIndex(i); renderAll(); });
+      rail.appendChild(item);
+      if (i < list.length - 1) {
+        const connector = document.createElement("div");
+        connector.className = "rail-connector";
+        rail.appendChild(connector);
+      }
+    });
+  }
+
+  function renderContent() {
+    const list = steps();
+    const i = currentIndex();
+    const step = list[i];
+
+    document.getElementById("step-count").textContent = "Step " + (i + 1) + " of " + list.length;
+    document.getElementById("step-title").textContent = step.title;
+    document.getElementById("step-desc").textContent = step.desc;
+    document.getElementById("step-body").innerHTML = step.body;
+    wireStepExtras(step.id);
+
+    document.getElementById("back-btn").disabled = i === 0;
+    document.getElementById("next-btn").textContent = i === list.length - 1 ? "Finish" : "Next";
+    document.getElementById("next-btn").disabled = i === list.length - 1 && !!state.done[step.id] === false ? false : false;
+
+    const doneCheckbox = document.getElementById("done-checkbox");
+    doneCheckbox.checked = !!state.done[step.id];
+    doneCheckbox.onchange = () => {
+      state.done[step.id] = doneCheckbox.checked;
+      saveState(state);
+      renderRail();
+    };
+
+    // Wire up preference controls if this step rendered them
+    const toggle = document.getElementById("auto-propagate-toggle");
+    if (toggle) {
+      toggle.checked = !!state.autoPropagate;
+      toggle.addEventListener("change", () => {
+        state.autoPropagate = toggle.checked;
+        saveState(state);
+        updateCopyHint();
+      });
+      updateCopyHint();
+
+      document.getElementById("copy-btn").addEventListener("click", (e) => {
+        const message = state.autoPropagate
+          ? "Migrate anything in lyra-ux-templates and agent-next-gen-v1 that should adopt the new lyra-ui commits — straightforward, same-shape fixes automatically, but ask me first for anything that introduces a new component, pattern, or breaking prop change. Then update the Sync check section in each app's CLAUDE.md so this auto-migrate behavior is the default going forward, and update .lyra-ui-sync in both apps to lyra-ui's current HEAD so these commits aren't re-flagged next time."
+          : "Tell me what in lyra-ux-templates and agent-next-gen-v1 should be migrated to adopt the new lyra-ui commits, and ask before changing anything. Once we're done (or if I decide not to migrate), update .lyra-ui-sync in both apps to lyra-ui's current HEAD so these commits aren't re-flagged next time.";
+        copyText(message, e.currentTarget);
+      });
+    }
+  }
+
+  function updateCopyHint() {
+    const hint = document.getElementById("copy-hint");
+    if (!hint) return;
+    hint.textContent = state.autoPropagate
+      ? "Will ask Claude to auto-migrate straightforward changes"
+      : "Will ask Claude to always confirm before migrating (default)";
+  }
+
+  /* ── Shared clipboard helper ── */
+  async function copyText(text, btn) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    if (btn) {
+      const original = btn.textContent;
+      btn.textContent = "Copied!";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = original; btn.classList.remove("copied"); }, 1600);
+    }
+  }
+
+  /* ── Per-step wiring for install flow's action steps ── */
+  let pickedFolderName = "";
+
+  function wireStepExtras(stepId) {
+    if (stepId === "install-access") wireAccessStep();
+    if (stepId === "install-download") wireDownloadStep();
+    if (stepId === "install-storybook") wireStorybookStep();
+    if (stepId === "install-scaffold") wireScaffoldStep();
+    if (stepId === "update-pull") wirePullStep();
+  }
+
+  const REPO_OWNER_EMAIL = "david.bauer@nice.com";
+
+  function accessMessage() {
+    const username = document.getElementById("gh-username").value.trim();
+    return username
+      ? "Hi David — could you add my GitHub account (" + username + ") as a collaborator on davidbauerjr991/lyra-ui? I need it to pull the design system locally."
+      : "Hi David — could you add me as a collaborator on davidbauerjr991/lyra-ui? I need it to pull the design system locally. My GitHub username is: ";
+  }
+
+  function wireAccessStep() {
+    const emailBtn = document.getElementById("email-access-btn");
+    const usernameInput = document.getElementById("gh-username");
+
+    function updateEmailHref() {
+      const subject = encodeURIComponent("Access request: lyra-ui");
+      const body = encodeURIComponent(accessMessage());
+      emailBtn.href = "mailto:" + REPO_OWNER_EMAIL + "?subject=" + subject + "&body=" + body;
+    }
+    updateEmailHref();
+    usernameInput.addEventListener("input", updateEmailHref);
+
+    document.getElementById("copy-access-btn").addEventListener("click", (e) => {
+      copyText(accessMessage(), e.currentTarget);
+    });
+    document.getElementById("access-hint").textContent = "\"Email David\" opens your mail client pre-addressed and pre-written — just hit send. Use \"Copy message\" for Slack/Teams instead.";
+  }
+
+  function wirePullStep() {
+    const copyBtn = document.getElementById("copy-pull-btn");
+    copyBtn.addEventListener("click", () => {
+      copyText("Pull the latest commits in lyra-ui (`git pull`), then check whether there's anything new since we last synced this app (`git -C ../lyra-ui log --oneline \"$(cat .lyra-ui-sync)\"..HEAD`). Only let me know if that turns up something to review.", copyBtn);
+    });
+    document.getElementById("pull-hint").textContent = "Paste into chat with Claude";
+  }
+
+  function wireDownloadStep() {
+    const pickBtn = document.getElementById("pick-folder-btn");
+    const label = document.getElementById("picked-folder-label");
+    if (window.showDirectoryPicker) {
+      pickBtn.addEventListener("click", async () => {
+        try {
+          const handle = await window.showDirectoryPicker();
+          pickedFolderName = handle.name;
+          label.textContent = "Selected folder: \"" + pickedFolderName + "\"";
+        } catch (e) {
+          // user cancelled the picker — leave prior state alone
+        }
+      });
+    } else {
+      pickBtn.textContent = "Type a folder name instead";
+      pickBtn.addEventListener("click", () => {
+        const typed = prompt("What should Claude call the parent workspace folder?", "lyra-workspace");
+        if (typed) {
+          pickedFolderName = typed;
+          label.textContent = "Using folder name: \"" + pickedFolderName + "\"";
+        }
+      });
+    }
+
+    const copyBtn = document.getElementById("copy-clone-btn");
+    copyBtn.addEventListener("click", () => {
+      const folder = pickedFolderName || "lyra-workspace";
+      const message = "Clone https://github.com/davidbauerjr991/lyra-ui.git into a new folder called \"" + folder + "\" so it's ready to be a sibling to any app that consumes it.";
+      copyText(message, copyBtn);
+    });
+    document.getElementById("clone-hint").textContent = "Paste into chat with Claude";
+  }
+
+  function wireStorybookStep() {
+    const copyBtn = document.getElementById("copy-storybook-btn");
+    copyBtn.addEventListener("click", () => {
+      copyText("Install dependencies in lyra-ui if needed, then run `npm run storybook` so I can see the component library.", copyBtn);
+    });
+    document.getElementById("storybook-hint").textContent = "Paste into chat with Claude";
+
+    document.getElementById("copy-rebuild-btn").addEventListener("click", (e) => {
+      copyText("Run `npm run build-storybook` in lyra-ui to refresh the static Storybook build, then let me know when it's done.", e.currentTarget);
+    });
+  }
+
+  function wireScaffoldStep() {
+    const copyBtn = document.getElementById("copy-scaffold-btn");
+    copyBtn.addEventListener("click", () => {
+      const name = document.getElementById("new-repo-name").value.trim() || "my-new-project";
+      const appName = document.getElementById("new-app-name").value.trim() || "My New Project";
+      const pageType = document.querySelector('input[name="page-type"]:checked').value;
+      const message = pageType === "admin"
+        ? "Create a new sibling repo called \"" + name + "\" next to lyra-ui, based on the lyra-ux-templates starter (same vite.config.ts alias setup pointing at ../lyra-ui). The app's top header (AppHeader/AppName) should display \"" + appName + "\" — this is a separate app name, not the repo name and not any individual page's title; don't derive it from either. Scaffold it with a single blank admin page — match lyra-ux-templates/src/components/DesktopDesignsPage.tsx and OutboundEngagementPage.tsx exactly: same AdminShell + TreeMenu wiring, same pageActions (Secondary button, primary button, divider, Ask AI button), same navItems shape, same interiorPanelContent/rightPanelContent placeholder panels — the only thing to leave out is the actual mock records/rows (e.g. DesktopDesignsPage's `records` array and table). Don't preemptively strip buttons or props you assume aren't needed yet — match the reference component's full shape and let the user pull out whatever they don't want for their prototype. For any toggle-able panel (the interior detail panel especially), check lyra-ui/src/components/__stories__/AdminShell.stories.tsx first for exactly how it's meant to be triggered (its \"With Page Header\" story opens the details panel via an ActionIconButton inside pageActions, not a PageHeader-level toggle) — match that story's actual wiring, don't invent a different trigger mechanism. If matching a story would require changing a lyra-ui component itself (not just how you call it), stop and ask me first — never modify a lyra-ui component on your own judgment, even to fix something that looks like a bug. Important: DesktopDesignsPage (and OutboundEngagementPage) are never mounted standalone — lyra-ux-templates/src/App.tsx always wraps them in an app-level Header (AppHeader) + Sidebar (LeftNav) shell (see Header.tsx/Sidebar.tsx there), which is where the top app bar and left icon rail come from. Carry that same wrapping into the new repo's App.tsx too — adapt Header.tsx/Sidebar.tsx for a single-page app (drop the multi-page AppMenu switcher, pick one relevant icon/label for the LeftNav item) rather than leaving the new page mounted bare. (This is different from the agent-page variant below, where AgentNextGenPage is self-contained and already includes its own header/nav — don't add an extra Header/Sidebar wrapper around that one.) Also default the new app's home page to a login screen and include the same \"Good morning\" welcome modal agent-next-gen-v1's AgentNextGenPage.tsx shows on load, even though this is a blank admin page — mirror agent-next-gen-v1's actual reference implementation for both, not lyra-ux-templates' (which has neither): its LoginPage.tsx (a thin `<LoginCard onLaunch={...} />` wrapper, centered full-screen) plus its App.tsx routing (a `\"login\"` page shown on the empty/root hash, navigating into the app shell once launched) for the login screen; and the `Overlay` + `Container`'s modal variant + greeting + placeholder summary text + Go Available/Start Offline buttons composition from its welcome modal — reuse that same composition, adjusting the copy since a blank admin page has no real stats to summarize yet. Both are on by default; tell the user they're welcome to remove either if they don't want them for this prototype. Follow lyra-ui's CLAUDE.md and PROJECT_SUMMARY.md conventions: only lyra-ui components, no hand-rolled UI, and carry over its CLAUDE.md and .lyra-ui-sync file so it inherits the sync check."
+        : "Create a new sibling repo called \"" + name + "\" next to lyra-ui, based on the lyra-ux-templates starter (same vite.config.ts alias setup pointing at ../lyra-ui). The app's top header (AppHeader/AppName) should display \"" + appName + "\" — this is a separate app name, not the repo name and not any individual page's title; don't derive it from either. Scaffold it with a single blank agent page — match agent-next-gen-v1/src/components/AgentNextGenPage.tsx exactly (the fuller reference app — not lyra-ux-templates' simpler version of the same filename, which lacks the login flow and welcome modal below): same AppHeader + LeftNav + AiPanel wiring and actions, same shell structure — the only thing to leave out is the actual mock records (agent/customer data, notifications, etc). For the AppHeader and LeftNav specifically, match lyra-ui's AgentNextGenTemplate.stories.tsx \"Agent Next Gen – With Page Header\" story exactly — same \"Agent Next Gen\" AppName + AppMenu popover wiring, same NAV_ITEMS icon rail, same CreateNew + InteractionNavItem header slot (no interaction cards shown until one is actually launched from CreateNew) — don't approximate this from memory or invent different wiring. Don't preemptively strip buttons or props you assume aren't needed yet — match the reference component's full shape and let the user pull out whatever they don't want for their prototype. If matching it exactly would require changing a lyra-ui component itself (not just how you call it), stop and ask me first — never modify a lyra-ui component on your own judgment, even to fix something that looks like a bug. AgentNextGenPage is self-contained (it builds its own AppHeader + LeftNav inline), so mount it directly in App.tsx with no extra Header/Sidebar wrapper. Also default the new app's home page to a login screen and include the same \"Good morning\" welcome modal — mirror agent-next-gen-v1's LoginPage.tsx (a thin `<LoginCard onLaunch={...} />` wrapper, centered full-screen) plus its App.tsx routing (a `\"login\"` page shown on the empty/root hash, navigating to the agent page once launched), and its welcome modal (`Overlay` + `Container`'s modal variant + greeting + summary text + Go Available/Start Offline buttons) shown once on load. Both are on by default; tell the user they're welcome to remove either if they don't want them for this prototype. Follow lyra-ui's CLAUDE.md and PROJECT_SUMMARY.md conventions: only lyra-ui components, no hand-rolled UI, and carry over its CLAUDE.md and .lyra-ui-sync file so it inherits the sync check.";
+      copyText(message, copyBtn);
+    });
+    document.getElementById("scaffold-hint").textContent = "Paste into chat with Claude";
+
+    document.getElementById("reveal-launch-btn").addEventListener("click", () => {
+      document.getElementById("launch-section").style.display = "block";
+    });
+
+    document.getElementById("copy-launch-btn").addEventListener("click", (e) => {
+      const name = document.getElementById("new-repo-name").value.trim() || "my-new-project";
+      copyText("Install dependencies in \"" + name + "\" and run a production build to confirm it compiles cleanly using lyra-ui components. Compiling isn't the finish line — go through every prop you passed to the reference component (AdminShell's pageActions, interiorPanelContent, rightPanelContent, the Ask AI button, etc.) and confirm each one is actually wired end-to-end: a visible affordance exists, its callback is connected to real state, and toggling that state actually shows/hides the thing it's supposed to. Check the wiring against the actual lyra-ui reference (the component's own Storybook story, e.g. AdminShell.stories.tsx) rather than assuming how it should work. If you find a real gap in a lyra-ui component itself, tell me what you found and ask before changing anything there — fix it in the consuming app, or wait for my go-ahead, don't patch lyra-ui on your own. Tell me what you checked and what you found before telling me the exact `npm run dev` command to run myself so I can see it live in my own browser.", e.currentTarget);
+    });
+    document.getElementById("launch-hint").textContent = "";
+  }
+
+  function renderAll() {
+    renderRail();
+    renderContent();
+  }
+
+  document.getElementById("back-btn").addEventListener("click", () => {
+    setCurrentIndex(currentIndex() - 1);
+    renderAll();
+  });
+  document.getElementById("next-btn").addEventListener("click", () => {
+    const list = steps();
+    const i = currentIndex();
+    if (i === list.length - 1) {
+      state.done[list[i].id] = true;
+      saveState(state);
+      renderAll();
+      return;
+    }
+    setCurrentIndex(i + 1);
+    renderAll();
+  });
+
+  document.querySelectorAll(".mode-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      mode = tab.dataset.mode;
+      state.mode = mode;
+      saveState(state);
+      document.querySelectorAll(".mode-tab").forEach(t => t.classList.toggle("active", t === tab));
+      renderAll();
+    });
+  });
+  document.querySelectorAll(".mode-tab").forEach(t => t.classList.toggle("active", t.dataset.mode === mode));
+
+  renderAll();
+</script>
+
+</body>
+</html>
