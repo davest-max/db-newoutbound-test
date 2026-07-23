@@ -7,7 +7,8 @@ import { cn } from "../lib/utils";
 interface CXoneLogoProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 /**
- * NICE CXone wordmark logo.
+ * Wordmark logo (ANONYMIZED for user testing — see cxone-logo.svg /
+ * cxone-logo-dark.svg, both replaced with a generic placeholder mark).
  * Automatically swaps between light and dark variants based on [data-theme].
  */
 export const CXoneLogo = React.forwardRef<HTMLDivElement, CXoneLogoProps>(
@@ -31,7 +32,7 @@ export const CXoneLogo = React.forwardRef<HTMLDivElement, CXoneLogoProps>(
       <div ref={ref} className={cn("inline-flex items-center", className)} {...props}>
         <img
           src={isDark ? cxoneLogoDark : cxoneLogoLight}
-          alt="NICE CXone"
+          alt="App logo"
           className="h-4"
         />
       </div>
