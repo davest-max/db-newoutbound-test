@@ -18,7 +18,11 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@nicecxone/lyra-ui": ["../lyra-ui/src/index.ts"],
+      "@nicecxone/lyra-ui/styles": ["../lyra-ui/src/styles/lyra-tokens.css"],
+      "@nicecxone/lyra-ui/agents-data": ["../lyra-ui/src/components/__stories__/create-new-agents-data.ts"],
+      "@nicecxone/lyra-ui/customers-data": ["../lyra-ui/src/components/__stories__/create-new-customers-data.ts"]
     }
   },
   "include": ["src"]

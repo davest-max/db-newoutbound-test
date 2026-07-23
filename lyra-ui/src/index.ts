@@ -161,6 +161,15 @@ export type { LabelProps } from "./components/label";
 /* ── Divider ── */
 export { Divider } from "./components/divider";
 export type { DividerProps, DividerOrientation } from "./components/divider";
+// STOPGAP: `agent-next-gen-v1` imports this as `Separator` (older/expected
+// name). Same component, aliased so the app builds. Consider renaming the
+// call sites to `Divider` instead of keeping this alias long-term.
+export { Divider as Separator } from "./components/divider";
+export type { DividerProps as SeparatorProps } from "./components/divider";
+
+/* ── Modal (STOPGAP — see modal.tsx header comment) ── */
+export { Modal } from "./components/modal";
+export type { ModalProps } from "./components/modal";
 
 /* ── Chart ── */
 export { Chart } from "./components/chart";
