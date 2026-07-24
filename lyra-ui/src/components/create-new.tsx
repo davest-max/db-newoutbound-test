@@ -82,6 +82,13 @@ function formatQueueText(queueCount: number, waitTimeSeconds: number): string {
   return `Queue: ${queueCount}   Wait Time: ${minutes}m ${seconds}s`;
 }
 
+/** Strips everything but digits so phone numbers can be compared regardless
+ *  of formatting (dashes, parens, spaces, a leading "+1") — e.g. a search of
+ *  "456-555-9981" should match a stored value of "+14565559981". */
+function digitsOnly(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
 export interface CreateNewCategory {
   /** Unique id */
   id: string;
@@ -864,11 +871,17 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
       activeGroup?.kind === "favorites"
         ? allOutboundContacts.filter((c) => favoriteIds.has(c.id))
         : activeGroup?.contacts ?? [];
+    const searchDigits = digitsOnly(search.trim());
     const filteredGroupContacts = search.trim()
       ? activeGroupContacts.filter(
           (c) =>
             c.name.toLowerCase().includes(search.trim().toLowerCase()) ||
-            c.subtitle?.toLowerCase().includes(search.trim().toLowerCase())
+            c.subtitle?.toLowerCase().includes(search.trim().toLowerCase()) ||
+            // Only treated as a phone search once the query has at least a
+            // few digits in it — guards against an empty/near-empty
+            // `searchDigits` (e.g. searching "Pri") matching every contact.
+            (searchDigits.length >= 3 &&
+              c.phoneNumbers?.some((p) => digitsOnly(p.value).includes(searchDigits)))
         )
       : activeGroupContacts;
     const totalGroupPages = Math.max(1, Math.ceil(filteredGroupContacts.length / pageSize));

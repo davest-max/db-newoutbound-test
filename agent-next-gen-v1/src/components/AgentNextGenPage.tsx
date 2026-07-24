@@ -151,6 +151,9 @@ const OUTBOUND_CUSTOMERS: NonNullable<CreateNewOutboundConfig["groups"][number][
   subtitle: c.customerId,
   avatarClassName: c.avatarClassName,
   channels: c.channels,
+  // Lets the Outbound picker's Customers search match on a phone number,
+  // not just name/customerId (see CreateNewCustomerRecord.phoneNumbers).
+  phoneNumbers: c.phoneNumbers,
 }));
 
 const OUTBOUND_TEAMS: NonNullable<CreateNewOutboundConfig["groups"][number]["contacts"]> = [
