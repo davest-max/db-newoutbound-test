@@ -714,6 +714,14 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
     const [detailChannel, setDetailChannel] = useState<ChannelType | "">("");
     const [detailPhone, setDetailPhone] = useState("");
     const [detailSkill, setDetailSkill] = useState("");
+    // The specific phone number that matched a phone-number search, if the
+    // contact was reached that way (set in `goToDetail`, from the still-live
+    // `search` value at the moment the agent picks a channel — `pushScreen`
+    // clears `search` right after). Kept in its own bit of state, separate
+    // from `detailPhone`, because `defaultDetailValueFor` needs to re-derive
+    // `detailPhone` every time the channel changes on screen 2 (see the
+    // effect below), and by then `search` itself is long gone.
+    const [matchedPhoneValue, setMatchedPhoneValue] = useState("");
     const searchInputRef = React.useRef<HTMLInputElement>(null);
     // Set right before the `launchRequest` effect below opens this popover
     // programmatically, and read (then cleared) inside `onOpenAutoFocus` on
@@ -760,6 +768,7 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
           setSearch("");
           setPhone({ countryCode: "us", number: "" });
           setPage(1);
+          setMatchedPhoneValue("");
         }, 200);
         return () => clearTimeout(t);
       }
@@ -817,7 +826,22 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
     // ever have the one derived option, so that's the only way they can run
     // out; phone falls back to "" only once every one of
     // `outbound.phoneOptions` is open).
-    const defaultDetailValueFor = (contact: CreateNewOutboundContact, channel: ChannelType): string => {
+    // A contact's own `phoneNumbers` (Mobile/Home/Work, etc.) take priority
+    // over the shared `outbound.phoneOptions` pool whenever the contact has
+    // any on file — same fallback `phoneNumbers`' own doc comment describes.
+    const phoneOptionsFor = (contact: CreateNewOutboundContact): { value: string; label: string }[] =>
+      contact.phoneNumbers?.length ? contact.phoneNumbers : outbound?.phoneOptions ?? [];
+
+    // `preferredValue` is the number that matched a phone-number search (see
+    // `goToDetail`) — when it's still a valid, non-open option for this
+    // contact/channel, it wins over "first available" so a contact found by
+    // searching one of their numbers lands on screen 2 with that exact
+    // number already selected instead of an arbitrary first entry.
+    const defaultDetailValueFor = (
+      contact: CreateNewOutboundContact,
+      channel: ChannelType,
+      preferredValue?: string
+    ): string => {
       const openAddresses = contact.openChannelAddresses?.[channel] ?? [];
       if (channel === "email") {
         const value = `${contact.name.toLowerCase().replace(/\s+/g, ".")}@example.com`;
@@ -827,12 +851,26 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
         const value = `@${contact.name}`;
         return openAddresses.includes(value) ? "" : value;
       }
-      return (outbound?.phoneOptions ?? []).find((o) => !openAddresses.includes(o.value))?.value ?? "";
+      const options = phoneOptionsFor(contact);
+      if (preferredValue && !openAddresses.includes(preferredValue) && options.some((o) => o.value === preferredValue)) {
+        return preferredValue;
+      }
+      return options.find((o) => !openAddresses.includes(o.value))?.value ?? "";
     };
 
     const goToDetail = (groupId: string, contact: CreateNewOutboundContact, channel: ChannelType) => {
+      // `search` is still whatever the agent typed to find this contact —
+      // pushScreen (below) clears it right after. Digits-only match, same as
+      // the Customers-group phone search itself, so formatting differences
+      // don't stop the match.
+      const searchDigits = digitsOnly(search.trim());
+      const matched =
+        searchDigits.length >= 3
+          ? contact.phoneNumbers?.find((p) => digitsOnly(p.value).includes(searchDigits))?.value
+          : undefined;
+      setMatchedPhoneValue(matched ?? "");
       setDetailChannel(channel);
-      setDetailPhone(defaultDetailValueFor(contact, channel));
+      setDetailPhone(defaultDetailValueFor(contact, channel, matched));
       setDetailSkill("");
       pushScreen({ kind: "detail", groupId, contactId: contact.id, channel });
     };
@@ -910,7 +948,7 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
     // from a phone number to a synthesized email/handle (or back) too.
     React.useEffect(() => {
       if (screen.kind !== "detail" || !activeOutboundContact || !detailChannel) return;
-      setDetailPhone(defaultDetailValueFor(activeOutboundContact, detailChannel));
+      setDetailPhone(defaultDetailValueFor(activeOutboundContact, detailChannel, matchedPhoneValue));
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [detailChannel]);
 
@@ -951,6 +989,9 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
         setDetailPhone(defaultDetailValueFor(contact, req.channel));
         setDetailSkill("");
         setSearch("");
+        // Not reached via a phone-number search — no matched number to
+        // preselect.
+        setMatchedPhoneValue("");
         setStack([{ kind: "group", groupId }, { kind: "detail", groupId, contactId: contact.id, channel: req.channel }]);
         openedViaLaunchRequestRef.current = true;
         setOpen(true);
@@ -986,7 +1027,10 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
         const value = activeOutboundContact ? defaultDetailValueFor(activeOutboundContact, "whatsapp") : "";
         return { label: "Select WhatsApp Handle", options: withoutActive(value ? [{ value, label: value }] : []) };
       }
-      return { label: "Select Phone", options: withoutActive(outbound?.phoneOptions ?? []) };
+      return {
+        label: "Select Phone",
+        options: withoutActive(activeOutboundContact ? phoneOptionsFor(activeOutboundContact) : outbound?.phoneOptions ?? []),
+      };
     })();
 
     const handleStartCall = () => {
