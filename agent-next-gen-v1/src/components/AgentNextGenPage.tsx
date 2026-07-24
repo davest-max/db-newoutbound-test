@@ -142,6 +142,10 @@ const OUTBOUND_AGENTS: NonNullable<CreateNewOutboundConfig["groups"][number]["co
   avatarClassName: a.avatarClassName,
   channels: a.channels,
   status: a.status,
+  // Labeled Mobile/Work numbers (see CreateNewAgentRecord.phoneNumbers) —
+  // without this, Select Phone would fall back to the shared, unlabeled
+  // outbound.phoneOptions pool for every agent.
+  phoneNumbers: a.phoneNumbers,
 }));
 
 const OUTBOUND_CUSTOMERS: NonNullable<CreateNewOutboundConfig["groups"][number]["contacts"]> = CREATE_NEW_CUSTOMERS.map((c) => ({
@@ -156,14 +160,42 @@ const OUTBOUND_CUSTOMERS: NonNullable<CreateNewOutboundConfig["groups"][number][
   phoneNumbers: c.phoneNumbers,
 }));
 
+// Teams/Skills are routing concepts, not individuals — "Mobile/Home/Work"
+// wouldn't make sense here, so these use their own fitting labels ("Main
+// Line"/"Overflow Line"/"Direct Line") instead. Still gives Select Phone
+// something more useful than an unlabeled number either way.
 const OUTBOUND_TEAMS: NonNullable<CreateNewOutboundConfig["groups"][number]["contacts"]> = [
-  { id: "t1", name: "Billing Support",    initials: "BS", subtitle: "TEAM-04", avatarClassName: "bg-lyra-accent-purple-soft text-lyra-accent-purple-strong", channels: ["voice", "email"] },
-  { id: "t2", name: "Tier 2 Escalations", initials: "T2", subtitle: "TEAM-07", avatarClassName: "bg-lyra-accent-red-soft text-lyra-accent-red-strong",       channels: ["voice", "email"] },
+  {
+    id: "t1", name: "Billing Support", initials: "BS", subtitle: "TEAM-04",
+    avatarClassName: "bg-lyra-accent-purple-soft text-lyra-accent-purple-strong", channels: ["voice", "email"],
+    phoneNumbers: [
+      { value: "+12135550100", label: "Main Line · (213) 555-0100" },
+      { value: "+12135550101", label: "Overflow Line · (213) 555-0101" },
+    ],
+  },
+  {
+    id: "t2", name: "Tier 2 Escalations", initials: "T2", subtitle: "TEAM-07",
+    avatarClassName: "bg-lyra-accent-red-soft text-lyra-accent-red-strong", channels: ["voice", "email"],
+    phoneNumbers: [
+      { value: "+13395550200", label: "Main Line · (339) 555-0200" },
+      { value: "+13395550201", label: "Overflow Line · (339) 555-0201" },
+    ],
+  },
 ];
 
 const OUTBOUND_SKILLS: NonNullable<CreateNewOutboundConfig["groups"][number]["contacts"]> = [
-  { id: "s1", name: "Spanish Language",  initials: "ES", subtitle: "SKL-12", avatarClassName: "bg-lyra-accent-green-soft text-lyra-accent-green-strong", channels: ["voice", "email"], status: "available", queueCount: 4, waitTimeSeconds: 200 },
-  { id: "s2", name: "Technical Support", initials: "TS", subtitle: "SKL-03", avatarClassName: "bg-lyra-accent-blue-soft text-lyra-accent-blue-strong",   channels: ["voice", "email"], status: "busy",      queueCount: 7, waitTimeSeconds: 95 },
+  {
+    id: "s1", name: "Spanish Language", initials: "ES", subtitle: "SKL-12",
+    avatarClassName: "bg-lyra-accent-green-soft text-lyra-accent-green-strong", channels: ["voice", "email"],
+    status: "available", queueCount: 4, waitTimeSeconds: 200,
+    phoneNumbers: [{ value: "+14805550300", label: "Direct Line · (480) 555-0300" }],
+  },
+  {
+    id: "s2", name: "Technical Support", initials: "TS", subtitle: "SKL-03",
+    avatarClassName: "bg-lyra-accent-blue-soft text-lyra-accent-blue-strong", channels: ["voice", "email"],
+    status: "busy", queueCount: 7, waitTimeSeconds: 95,
+    phoneNumbers: [{ value: "+15305550301", label: "Direct Line · (530) 555-0301" }],
+  },
 ];
 
 const OUTBOUND_CONFIG: CreateNewOutboundConfig = {
@@ -183,10 +215,16 @@ const OUTBOUND_CONFIG: CreateNewOutboundConfig = {
     { id: "sms",      label: "SMS",                            icon: <MessageSquare className="h-5 w-5" strokeWidth={1.5} /> },
     { id: "whatsapp", label: "WhatsApp",                       icon: <MessageCircle className="h-5 w-5" strokeWidth={1.5} /> },
   ],
+  // Last-resort fallback — only reached for a contact with no
+  // `phoneNumbers` of its own (see `phoneOptionsFor` in create-new.tsx).
+  // Every current group (Agents/Teams/Skills/Customers) supplies its own
+  // labeled numbers now, so this is here mainly for Favorites (which can
+  // mix in a record type that hasn't been given personal numbers) and any
+  // future group that doesn't set phoneNumbers.
   phoneOptions: [
-    { value: "+14563833329", label: "(456) 383-3329" },
-    { value: "+14565559981", label: "(456) 555-9981" },
-    { value: "+14565550147", label: "(456) 555-0147" },
+    { value: "+14563833329", label: "Line 1 · (456) 383-3329" },
+    { value: "+14565559981", label: "Line 2 · (456) 555-9981" },
+    { value: "+14565550147", label: "Line 3 · (456) 555-0147" },
   ],
   skillOptions: [
     { value: "general", label: "General Support" },
