@@ -216,6 +216,14 @@ export interface CreateNewOutboundConfig {
   phoneOptions: { value: string; label: string }[];
   /** Options for the detail screen's "Outbound Skill" dropdown */
   skillOptions: { value: string; label: string }[];
+  /** Shows/hides the detail screen's "Outbound Skill" field entirely.
+   *  Defaults to `true` (shown) — set to `false` to temporarily pull it out
+   *  of the flow (e.g. for a user-testing build that isn't ready to cover
+   *  skill routing yet) without deleting any of the skillOptions/
+   *  onStartCall wiring, so it's a one-line flip to bring back. When
+   *  `false`, "Start Interaction" no longer waits on a skill being chosen
+   *  either, and `onStartCall` receives `skillId: ""`. */
+  skillSelectionEnabled?: boolean;
   /** Fired when a number is submitted from a "dialpad"-kind group (Enter key) */
   onQuickDial?: (phoneNumber: string) => void;
   /** Fired when "Start Interaction" is pressed on the detail screen */
@@ -1033,8 +1041,11 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
       };
     })();
 
+    // Skill is only a required field when its own selector is actually
+    // shown — see CreateNewOutboundConfig.skillSelectionEnabled.
+    const skillSelectionEnabled = outbound?.skillSelectionEnabled ?? true;
     const handleStartCall = () => {
-      if (!outbound || !activeOutboundContact || !detailChannel || !detailSkill) return;
+      if (!outbound || !activeOutboundContact || !detailChannel || (skillSelectionEnabled && !detailSkill)) return;
       outbound.onStartCall?.({
         contact: activeOutboundContact,
         channel: detailChannel,
@@ -1297,7 +1308,7 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
                 variant="default"
                 size="lg"
                 className="w-full"
-                disabled={!detailSkill}
+                disabled={skillSelectionEnabled && !detailSkill}
                 onClick={handleStartCall}
               >
                 Start Interaction
@@ -1433,13 +1444,15 @@ const CreateNew = React.forwardRef<HTMLButtonElement, CreateNewProps>(
                       onValueChange={setDetailPhone}
                       options={detailFieldMeta.options}
                     />
-                    <Select
-                      label="Outbound Skill"
-                      placeholder="Select Outbound Skill"
-                      value={detailSkill || undefined}
-                      onValueChange={setDetailSkill}
-                      options={outbound?.skillOptions ?? []}
-                    />
+                    {skillSelectionEnabled && (
+                      <Select
+                        label="Outbound Skill"
+                        placeholder="Select Outbound Skill"
+                        value={detailSkill || undefined}
+                        onValueChange={setDetailSkill}
+                        options={outbound?.skillOptions ?? []}
+                      />
+                    )}
                   </div>
                 )}
               </div>

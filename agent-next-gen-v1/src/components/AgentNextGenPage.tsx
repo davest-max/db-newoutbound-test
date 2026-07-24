@@ -232,6 +232,11 @@ const OUTBOUND_CONFIG: CreateNewOutboundConfig = {
     { value: "escalations", label: "Escalations" },
     { value: "vip", label: "VIP Support" },
   ],
+  // TEMPORARY — hidden for this round of user testing, not a permanent
+  // removal. skillOptions/onStartCall's skillId wiring are left untouched
+  // above so this is a one-line flip back to `true` (or just delete this
+  // line) once skill routing is ready to show again.
+  skillSelectionEnabled: false,
   onQuickDial: (phoneNumber) => {
     // eslint-disable-next-line no-console
     console.log("Quick dial:", phoneNumber);
