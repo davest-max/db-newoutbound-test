@@ -104,7 +104,7 @@ function buildAppMenuGroups(onNavigate?: (page: Page) => void): AppMenuGroup[] {
   return [
     {
       items: [
-        { label: "Agent Next Gen", active: true },
+        { label: "My New Project", active: true },
         { label: "Agent Workspace Premium", onClick: () => onNavigate?.("agent-workspace") },
         { label: "Outbound Engagement", onClick: () => onNavigate?.("outbound") },
         { label: "Login", onClick: () => onNavigate?.("login") },
@@ -2324,8 +2324,8 @@ export function AgentNextGenPage({
           <PopoverPrimitive.Root open={appMenuOpen} onOpenChange={setAppMenuOpen}>
             <PopoverPrimitive.Trigger asChild>
               <AppName
-                icon={<img src={appIcon} alt="Agent Next Gen" className="h-6 w-6" />}
-                name="Agent Next Gen"
+                icon={<img src={appIcon} alt="My New Project" className="h-6 w-6" />}
+                name="My New Project"
                 compact={isCompactHeader}
                 aria-expanded={appMenuOpen}
               />
@@ -2341,7 +2341,7 @@ export function AgentNextGenPage({
                 <AppMenu
                   groups={appMenuGroups}
                   footer={<CXoneLogo />}
-                  header={isCompactHeader ? "Agent Next Gen" : undefined}
+                  header={isCompactHeader ? "My New Project" : undefined}
                 />
               </PopoverPrimitive.Content>
             </PopoverPrimitive.Portal>
