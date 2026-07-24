@@ -6,7 +6,6 @@ import {
   AppName,
   AppMenu,
   CXoneLogo,
-  Modal,
   AiPanel,
   DraggablePanel,
   NotificationsBell,
@@ -38,7 +37,6 @@ import {
   DonutChart,
   DashboardCard,
   DashboardQueue,
-  AgentWelcomeMessage,
   TabList,
   Tab,
   ChannelTab,
@@ -518,13 +516,6 @@ function getGreetingPeriod(): "morning" | "afternoon" | "evening" {
   if (hour < 18) return "afternoon";
   return "evening";
 }
-
-/* Welcome modal — last login timestamp, assigned-skills count, and live
-   online/available teammate counts shown under the greeting. */
-const WELCOME_MODAL_LAST_LOGIN = "Today at 8:42 AM";
-const AGENT_SKILLS_COUNT = 3;
-const TEAMMATES_ONLINE_COUNT = 8;
-const TEAMMATES_AVAILABLE_COUNT = 5;
 
 const INTERACTION_OWNERS = [
   "John Smith",
@@ -1442,7 +1433,10 @@ export function AgentNextGenPage({
    */
   sidePanelToggleLabel?: string;
 }) {
-  const [navOpen, setNavOpen] = useState(!!initialInteraction);
+  // Left rail defaults to expanded on load (previously only started
+  // expanded when seeded with an initialInteraction) — still collapses
+  // itself on a narrow viewport via the isNavNarrow effect below.
+  const [navOpen, setNavOpen] = useState(true);
   // No interactions exist until the agent launches one from the CreateNew
   // menu (Start Interaction / quick dial) — see handleStartCall/handleQuick
   // Dial below. Click any resulting InteractionNavItem card to make it the
@@ -1488,8 +1482,9 @@ export function AgentNextGenPage({
   }, [activeInteractionId]);
   const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
-  const [agentStatus, setAgentStatus] = useState<AgentStatus>("unavailable");
-  const [showWelcomeModal, setShowWelcomeModal] = useState(true);
+  // Welcome modal removed — agent now just starts Available instead of
+  // needing a click through "Go Available"/"Start Unavailable" first.
+  const [agentStatus, setAgentStatus] = useState<AgentStatus>("available");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [appMenuOpen, setAppMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(
@@ -2046,20 +2041,6 @@ export function AgentNextGenPage({
   // shared implementation instead of three hand-copied ones that could
   // (and did) quietly drift out of sync.
   const { launchRequest: outboundLaunchRequest, onLaunchRequestHandled, getHeaderAction } = useOutboundAddButton(outboundConfig);
-
-  /* Welcome modal — shown once on page load; "Go Available" flips the agent
-     to Available, "Start Unavailable" keeps them Unavailable (the default
-     state). lyra-ui's `AgentStatus` dropped "offline" (just
-     Available/Unavailable now), so this no longer keeps the agent
-     "Offline" — Unavailable is the closest equivalent starting state. */
-  const handleGoAvailable = () => {
-    handleStatusChange("available");
-    setShowWelcomeModal(false);
-  };
-  const handleStartUnavailable = () => {
-    handleStatusChange("unavailable");
-    setShowWelcomeModal(false);
-  };
 
   /* Generic open/close state machine, shared by all five draggable panels
      (AI, Notifications, Conversations, Schedule, Screen Pop) — mounts on
@@ -3072,58 +3053,6 @@ export function AgentNextGenPage({
         )}
 
       </div>
-
-      {/* ── Welcome modal — shown once on page load. Uses the real lyra-ui
-          `Modal` component (variant="light": frosted blur backdrop,
-          portal-rendered via Radix Dialog, focus-trapped) rather than a
-          hand-rolled backdrop div, so it actually dims/blurs the dashboard
-          behind it like a real overlay instead of just painting over it.
-          Not dismissible via backdrop click or Escape — only the two
-          buttons close it. Previously composed by hand as `Overlay` +
-          `AgentWelcomeMessage` (which itself rendered its own
-          `Container variant="modal"` shell) — `Modal` now owns that
-          Radix Dialog wiring directly, so `AgentWelcomeMessage` is passed
-          `bare` to skip its own card chrome and avoid nesting two.
-
-          `Modal`'s "light" variant is a fixed `bg-white/70` by design (see
-          Overlay.stories.tsx — "light" vs. "dark" are two deliberately
-          static, theme-independent overlay looks, not meant to react to
-          dark mode). This page's backdrop needs to actually match the
-          current theme, so we override just the background color via
-          `overlayClassName` (twMerge drops the variant's `bg-white/70` for
-          this `bg-[color-mix(...)]`, keeping `backdrop-blur-sm`). We use
-          color-mix() instead of a plain `bg-lyra-bg-surface-shell/70`
-          opacity modifier because Tailwind can't generate opacity-modified
-          utilities for our `var(--lyra-color-*)` tokens (same root cause as
-          the Tag border-color bug — see lyra-ui's PROJECT_SUMMARY.md).
-
-          The card itself is still the shared `AgentWelcomeMessage` lyra-ui
-          component (icon/title/lastLogin block + info-box slot + Separator +
-          two-button footer) — `ariaTitle` gives screen readers the real
-          dialog name since that title now renders inside `AgentWelcomeMessage`
-          itself rather than through `Modal`'s own `headerTitle`. ── */}
-      <Modal
-        variant="light"
-        overlayClassName="bg-[color-mix(in_srgb,var(--lyra-color-bg-surface-shell)_75%,transparent)]"
-        open={showWelcomeModal}
-        onClose={() => setShowWelcomeModal(false)}
-        closeOnBackdropClick={false}
-        ariaTitle={`Good morning, ${CURRENT_AGENT_FIRST_NAME} ${CURRENT_AGENT_LAST_NAME}`}
-      >
-        <AgentWelcomeMessage
-          bare
-          icon={<img src={appIcon} alt="" className="h-8 w-8 shrink-0" />}
-          title={`Good morning, ${CURRENT_AGENT_FIRST_NAME} ${CURRENT_AGENT_LAST_NAME}`}
-          lastLogin={WELCOME_MODAL_LAST_LOGIN}
-          onPrimaryClick={handleGoAvailable}
-          onSecondaryClick={handleStartUnavailable}
-        >
-          <p className="lyra-body-md text-lyra-fg-default">
-            You are currently assigned to {AGENT_SKILLS_COUNT} skills. {TEAMMATES_ONLINE_COUNT} teammates are
-            online, {TEAMMATES_AVAILABLE_COUNT} are available. Select an option below to begin.
-          </p>
-        </AgentWelcomeMessage>
-      </Modal>
     </div>
   );
 }
