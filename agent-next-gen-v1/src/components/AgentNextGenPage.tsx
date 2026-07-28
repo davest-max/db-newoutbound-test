@@ -2327,6 +2327,7 @@ export function AgentNextGenPage({
                 icon={<img src={appIcon} alt="My New Project" className="h-6 w-6" />}
                 name="My New Project"
                 compact={isCompactHeader}
+                chevron={false}
                 aria-expanded={appMenuOpen}
               />
             </PopoverPrimitive.Trigger>
