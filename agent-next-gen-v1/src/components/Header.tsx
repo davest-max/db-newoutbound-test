@@ -33,7 +33,7 @@ export function Header({ onNavigate, currentPage = "agent-workspace" }: HeaderPr
   const appMenuGroups: AppMenuGroup[] = [
     {
       items: [
-        { label: "My New Project", onClick: () => navigate("agent") },
+        { label: "Agent Workspace", onClick: () => navigate("agent") },
         { label: "Agent Workspace Premium", active: currentPage === "agent-workspace", onClick: () => navigate("agent-workspace") },
         { label: "Outbound Engagement", active: currentPage === "outbound", onClick: () => navigate("outbound") },
         { label: "Login", active: currentPage === "login", onClick: () => navigate("login") },
