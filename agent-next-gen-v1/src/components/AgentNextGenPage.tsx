@@ -1492,6 +1492,12 @@ export function AgentNextGenPage({
   const [agentStatus, setAgentStatus] = useState<AgentStatus>("available");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [appMenuOpen, setAppMenuOpen] = useState(false);
+  // TEMPORARY — the header's app-switcher dropdown (Agent Workspace/Agent
+  // Workspace Premium/Outbound Engagement/Login) is hidden for this round
+  // of user testing, not deleted. appMenuGroups/appMenuOpen and the
+  // Popover/AppMenu JSX below are all still intact — flip this back to
+  // `true` to restore the click-to-open interaction.
+  const appSwitcherEnabled = false;
   const [darkMode, setDarkMode] = useState(
     () => document.documentElement.getAttribute("data-theme") === "dark"
   );
@@ -2321,32 +2327,47 @@ export function AgentNextGenPage({
       {/* ── App Header ── */}
       <AppHeader
         appName={
-          <PopoverPrimitive.Root open={appMenuOpen} onOpenChange={setAppMenuOpen}>
-            <PopoverPrimitive.Trigger asChild>
-              <AppName
-                icon={<img src={appIcon} alt="Agent Workspace" className="h-6 w-6" />}
-                name="Agent Workspace"
-                compact={isCompactHeader}
-                chevron={false}
-                aria-expanded={appMenuOpen}
-              />
-            </PopoverPrimitive.Trigger>
-            <PopoverPrimitive.Portal>
-              <PopoverPrimitive.Content
-                side="bottom"
-                align="start"
-                sideOffset={6}
-                onOpenAutoFocus={(e: Event) => e.preventDefault()}
-                className="z-[9999] animate-in fade-in-0 slide-in-from-top-2 duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-1 data-[state=closed]:duration-100"
-              >
-                <AppMenu
-                  groups={appMenuGroups}
-                  footer={<CXoneLogo />}
-                  header={isCompactHeader ? "Agent Workspace" : undefined}
+          appSwitcherEnabled ? (
+            <PopoverPrimitive.Root open={appMenuOpen} onOpenChange={setAppMenuOpen}>
+              <PopoverPrimitive.Trigger asChild>
+                <AppName
+                  icon={<img src={appIcon} alt="Agent Workspace" className="h-6 w-6" />}
+                  name="Agent Workspace"
+                  compact={isCompactHeader}
+                  chevron={false}
+                  aria-expanded={appMenuOpen}
                 />
-              </PopoverPrimitive.Content>
-            </PopoverPrimitive.Portal>
-          </PopoverPrimitive.Root>
+              </PopoverPrimitive.Trigger>
+              <PopoverPrimitive.Portal>
+                <PopoverPrimitive.Content
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  onOpenAutoFocus={(e: Event) => e.preventDefault()}
+                  className="z-[9999] animate-in fade-in-0 slide-in-from-top-2 duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-1 data-[state=closed]:duration-100"
+                >
+                  <AppMenu
+                    groups={appMenuGroups}
+                    footer={<CXoneLogo />}
+                    header={isCompactHeader ? "Agent Workspace" : undefined}
+                  />
+                </PopoverPrimitive.Content>
+              </PopoverPrimitive.Portal>
+            </PopoverPrimitive.Root>
+          ) : (
+            // No Popover wrapper at all while the switcher is disabled — a
+            // plain, inert AppName rather than a clickable trigger with
+            // nothing behind it.
+            <AppName
+              icon={<img src={appIcon} alt="Agent Workspace" className="h-6 w-6" />}
+              name="Agent Workspace"
+              compact={isCompactHeader}
+              chevron={false}
+              className="pointer-events-none"
+              aria-haspopup={false}
+              aria-label="Agent Workspace"
+            />
+          )
         }
         actions={
           <>
