@@ -2436,9 +2436,17 @@ export function AgentNextGenPage({
               // Standalone AppHeader "?" icon removed — this app now uses
               // `AgentProfile`'s own conditional "Help" row instead (renders
               // below "Agent Leg Disconnected" whenever `onHelpClick` is
-              // passed; see agent-profile.tsx). Same destination/new-tab
-              // behavior as the removed icon button.
-              onHelpClick={() => window.open("https://help.nicecxone.com/content/agent/cxoneagent/cxoneagent.htm?cshid=CXoneAgent", "_blank", "noopener,noreferrer")}
+              // passed; see agent-profile.tsx).
+              // ANONYMIZED for user testing: this used to open NICE's real
+              // help.nicecxone.com support page in a new tab. No neutral
+              // replacement destination exists, so this just logs instead
+              // of navigating anywhere — keeps the "Help" row itself
+              // clickable/testable without leaking a branded URL or
+              // 404ing on a fake one.
+              onHelpClick={() => {
+                // eslint-disable-next-line no-console
+                console.log("Help clicked");
+              }}
               onLogOut={() => onNavigate?.("login")}
               className="ml-1"
             />
